@@ -1,82 +1,148 @@
-const unsplashApiKey = 'bLWktsxPVSjMVXhhiTfoqMLe9QhihrBnJihprE3HfdY';
-const photoGalleryContainer = document.getElementById('gallery');
+const accessKey = 'bLWktsxPVSjMVXhhiTfoqMLe9QhihrBnJihprE3HfdY';
+const gallery = document.getElementById('gallery');
+const favoriteCounter = document.getElementById('favoriteCount');
+const favoriteModal = document.getElementById('favoriteModal');
+const modalGallery = document.getElementById('modalGallery');
+const closeButton = document.querySelector('.close-button');
 
-async function fetchRandomPhotos() {
-  const response = await fetch(`https://api.unsplash.com/photos/random?count=10&client_id=${unsplashApiKey}`);
-  const photoList = await response.json();
+function getStoredFavorites() {
+  const data = localStorage.getItem('favorites');
+  return data ? JSON.parse(data) : [];
+}
 
-  photoList.forEach(photoData => {
-    const photoCard = document.createElement('div');
-    photoCard.className = 'photo-card';
+function saveFavorites(favorites) {
+  localStorage.setItem('favorites', JSON.stringify(favorites));
+}
 
-    const isPhotoFavorite = checkIfPhotoIsFavorite(photoData.id);
-    const buttonLabel = isPhotoFavorite ? 'Favoriden Çıkar' : 'Favoriye Ekle';
-    const buttonClassName = isPhotoFavorite ? 'favorite-btn favorited' : 'favorite-btn';
+function isFavorited(id) {
+  const favorites = getStoredFavorites();
+  return favorites.some(photo => photo.id === id);
+}
 
-    photoCard.innerHTML = `
-      <img src="${photoData.urls.regular}">
-      <div class="info">  
-        <button class="${buttonClassName}" data-id="${photoData.id}">${buttonLabel}</button>
+function addToFavorites(photo) {
+  const favorites = getStoredFavorites();
+  if (!isFavorited(photo.id)) {
+    favorites.push(photo);
+    saveFavorites(favorites);
+  }
+}
+
+function removeFromFavorites(id) {
+  let favorites = getStoredFavorites();
+  favorites = favorites.filter(photo => photo.id !== id);
+  saveFavorites(favorites);
+}
+
+function updateFavoriteCounter() {
+  const count = getStoredFavorites().length;
+  if (count === 0) {
+    favoriteCounter.textContent = '❤️ Favori Yok';
+  } else {
+    favoriteCounter.textContent = `❤️ Favoriler: ${count}`;
+  }
+
+  favoriteCounter.classList.add('animate');
+  setTimeout(() => favoriteCounter.classList.remove('animate'), 300);
+}
+
+function createPhotoCard(photo) {
+    const isFav = isFavorited(photo.id);
+  const img = document.createElement('img');
+  img.src = '/assests/img/loader.gif';
+  const card = document.createElement('div');
+  card.className = 'photo-card';
+
+  card.innerHTML = `
+  <img src="${photo.urls.regular}"/>
+  <div class="favorite-click-button">
+    <button class="favorite-btn add-btn" title="Favoriye Ekle">➕</button>
+    <button class="favorite-btn remove-btn" title="Favoriden Çıkar">❌</button>
+  </div>
+`;
+
+  const addBtn = card.querySelector('.add-btn');
+  const removeBtn = card.querySelector('.remove-btn');
+
+  if (isFav) {
+    addBtn.classList.add('show');
+    addBtn.classList.remove('hide');
+  } else {
+    addBtn.classList.add('show');
+    addBtn.classList.remove('hide');
+  }
+
+  addBtn.addEventListener('click', () => {
+    addToFavorites(photo);
+    card.remove(); // favoriye eklendiyse sayfadan kaldır
+    updateFavoriteCounter();
+  });
+
+  removeBtn.addEventListener('click', () => {
+    removeFromFavorites(photo.id);
+    card.remove(); // favoriden çıkarıldıysa sil
+    updateFavoriteCounter();
+  });
+
+  return card;
+}
+
+async function fetchPhotos() {
+  try {
+    gallery.innerHTML='<div class="loading">loading...</div>'
+    const response = await fetch(`https://api.unsplash.com/photos/random?count=20&client_id=${accessKey}`);
+    const photos = await response.json();
+    const galleryLoading = document.querySelector('.loading');
+    if(photos){
+      galleryLoading.remove();
+    }
+    photos.forEach(photo => {
+      const card = createPhotoCard(photo);
+      gallery.appendChild(card);
+    });
+  } catch (error) {
+    console.error('Hata:', error);
+  }
+}
+
+favoriteCounter.addEventListener('click', () => {
+  modalGallery.innerHTML = '';
+  const favorites = getStoredFavorites();
+  favoriteModal.classList.add('show');
+  if (favorites.length === 0) {
+    modalGallery.innerHTML='<div class="modal-empty-photo">Henüz favori fotoğraf yok.</div>';
+    return;
+  }
+
+  favorites.forEach(photo => {
+    const card = document.createElement('div');
+    card.className = 'photo-card';
+
+    card.innerHTML = `
+      <img src="${photo.urls.regular}" />
+      <div class="modal-favorite-click-button">
+        <button class="favorite-btn remove-btn" title="Favoriden Çıkar">❌</button>
       </div>
     `;
 
-    photoCard.querySelector('button').addEventListener('click', () => {
-      if (checkIfPhotoIsFavorite(photoData.id)) {
-        removePhotoFromFavorites(photoData.id);
-      } else {
-        addPhotoToFavorites(photoData);
-      }
-      location.reload();
+    card.querySelector('button').addEventListener('click', () => {
+      removeFromFavorites(photo.id);
+      card.remove();
+      updateFavoriteCounter();
     });
 
-    photoGalleryContainer.appendChild(photoCard);
+    modalGallery.appendChild(card);
   });
-}
+});
 
-function getSavedFavorites() {
-  const storedFavorites = localStorage.getItem('favorites');
-  return storedFavorites ? JSON.parse(storedFavorites) : [];
-}
+closeButton.addEventListener('click', () => {
+  favoriteModal.classList.remove('show');
+});
 
-function addPhotoToFavorites(photoObject) {
-  const favoritesArray = getSavedFavorites();
-  favoritesArray.push(photoObject);
-  localStorage.setItem('favorites', JSON.stringify(favoritesArray));
-}
+window.addEventListener('click', (e) => {
+  if (e.target === favoriteModal) {
+    favoriteModal.classList.remove('show');
+  }
+});
 
-function removePhotoFromFavorites(photoId) {
-  let favoritesArray = getSavedFavorites();
-  favoritesArray = favoritesArray.filter(photo => photo.id !== photoId);
-  localStorage.setItem('favorites', JSON.stringify(favoritesArray));
-}
-
-function checkIfPhotoIsFavorite(photoId) {
-  const favoritesArray = getSavedFavorites();
-  return favoritesArray.some(photo => photo.id === photoId);
-}
-
-function renderSavedFavorites() {
-  const favoritesArray = getSavedFavorites();
-
-  favoritesArray.forEach(photoData => {
-    const photoCard = document.createElement('div');
-    photoCard.className = 'photo-card';
-
-    photoCard.innerHTML = `
-      <img src="${photoData.urls.regular}">
-      <div class="info">
-        <button class="favorite-btn favorited" data-id="${photoData.id}">Favoriden Çıkar</button>
-      </div>
-    `;
-
-    photoCard.querySelector('button').addEventListener('click', () => {
-      removePhotoFromFavorites(photoData.id);
-      location.reload();
-    });
-
-    photoGalleryContainer.appendChild(photoCard);
-  });
-}
-
-fetchRandomPhotos();
-renderSavedFavorites();
+fetchPhotos();
+updateFavoriteCounter();

@@ -1,19 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fotoğraf Galerisi</title>
-  <link rel="stylesheet" href="/assets/css/style.css" />
-</head>
-<body>
-  <header>
-    <h1>Fotoğraf Galerisi</h1>
-  </header>
-  <main>
-    <section id="gallery" class="gallery">
-    </section>
-  </main>
-  <script src="/assets/js/script.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fotoğraf Galerisi</title>
+    <link rel="stylesheet" href="/assets/css/style.css" />
+  </head>
+  <body>
+    <!-- Gallery -->
+    <header>
+      <h1>Unsplash Galeri</h1>
+      <div id="favoriteCount"></div>
+    </header>
+    <div class="gallery" id="gallery"></div>
+<!-- End Of Gallery -->
+    <!-- Modal -->
+    <div id="favoriteModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Favori Fotoğraflar</h2>
+          <div class="close-button">&times;</div>
+        </div>
+        <div id="modalGallery" class="modal-gallery"></div>
+      </div>
+    </div>
+<!-- End Of Modal -->
+    <script src="/assets/js/script.js"></script>
+  </body>
 </html>
