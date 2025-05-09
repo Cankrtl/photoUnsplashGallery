@@ -46,7 +46,7 @@ function updateFavoriteCounter() {
 }
 
 function createPhotoCard(photo) {
-    const isFav = isFavorited(photo.id);
+  const isFav = isFavorited(photo.id);
   const img = document.createElement('img');
   img.src = '/assests/img/loader.gif';
   const card = document.createElement('div');
@@ -55,7 +55,7 @@ function createPhotoCard(photo) {
   card.innerHTML = `
   <img src="${photo.urls.regular}"/>
   <div class="favorite-click-button">
-    <button class="favorite-btn add-btn" title="Favoriye Ekle">➕</button>
+    <button class="favorite-btn add-btn" title="Favoriye Ekle">❤️</button>
     <button class="favorite-btn remove-btn" title="Favoriden Çıkar">❌</button>
   </div>
 `;
@@ -71,28 +71,46 @@ function createPhotoCard(photo) {
     addBtn.classList.remove('hide');
   }
 
-  addBtn.addEventListener('click', () => {
+  addBtn.addEventListener('click', async () => {
     addToFavorites(photo);
-    card.remove(); // favoriye eklendiyse sayfadan kaldır
+    card.remove();
     updateFavoriteCounter();
+
+    const newPhoto = await fetchNewPhoto();
+    const newCard = createPhotoCard(newPhoto);
+    gallery.appendChild(newCard);
   });
 
-  removeBtn.addEventListener('click', () => {
+  removeBtn.addEventListener('click', async () => {
     removeFromFavorites(photo.id);
-    card.remove(); // favoriden çıkarıldıysa sil
+    card.remove();
     updateFavoriteCounter();
-  });
 
+    const newPhoto = await fetchNewPhoto();
+    const newCard = createPhotoCard(newPhoto);
+    gallery.appendChild(newCard);
+  });
   return card;
-}
+};
+
+async function fetchNewPhoto() {
+  try {
+    const response = await fetch(`https://api.unsplash.com/photos/random?count=1&client_id=${accessKey}`);
+    const [photo] = await response.json();
+    return photo;
+  } catch (error) {
+    console.error('Yeni fotoğraf getirilemedi:', error);
+    return null;
+  }
+};
 
 async function fetchPhotos() {
   try {
-    gallery.innerHTML='<div class="loading">loading...</div>'
+    gallery.innerHTML = '<div class="loading">loading...</div>'
     const response = await fetch(`https://api.unsplash.com/photos/random?count=20&client_id=${accessKey}`);
     const photos = await response.json();
     const galleryLoading = document.querySelector('.loading');
-    if(photos){
+    if (photos) {
       galleryLoading.remove();
     }
     photos.forEach(photo => {
@@ -109,7 +127,7 @@ favoriteCounter.addEventListener('click', () => {
   const favorites = getStoredFavorites();
   favoriteModal.classList.add('show');
   if (favorites.length === 0) {
-    modalGallery.innerHTML='<div class="modal-empty-photo">Henüz favori fotoğraf yok.</div>';
+    modalGallery.innerHTML = '<div class="modal-empty-photo">Henüz favori fotoğraf yok.</div>';
     return;
   }
 

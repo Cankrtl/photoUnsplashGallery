@@ -119,8 +119,14 @@ h2{
 
 .modal-gallery {
   display: flex;
+  justify-content: center;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+#modalGallery .photo-card {
+  margin: 0;
+  padding: 0;
 }
 
 .modal-gallery .photo-card {
